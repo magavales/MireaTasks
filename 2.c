@@ -111,7 +111,7 @@ void *udp_server(void *thread_data)
             if (FD_ISSET(sock, &readfd))
             {
                 recvfrom(sock, &ch, sizeof(ch), 0, (struct sockaddr *)&addr, &addr_len);
-                if(!strcmp(data->friend.ip_1, inet_ntoa(addr.sin_addr))){
+                if(strcmp(data->friend.ip_1, inet_ntoa(addr.sin_addr)) == 0){
                     if(ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_UP || ch == KEY_DOWN){
                         data->friend.key = ch;
                     }
@@ -120,7 +120,7 @@ void *udp_server(void *thread_data)
                     }
                     tank(ch, data);
                 }
-                if(!strcmp(data->enemy.ip_2, inet_ntoa(addr.sin_addr))){
+                if(strcmp(data->enemy.ip_2, inet_ntoa(addr.sin_addr)) == 0){
                     if(ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_UP || ch == KEY_DOWN){
                         data->enemy.key = ch;
                     }
@@ -144,7 +144,7 @@ void* render(void *thread_data){
 
     while(count_game != 1){
         usleep(16000);
-        pthread_mutex_lock(&mutex);
+        //pthread_mutex_lock(&mutex);
         clear();
         if(data->friend.key == KEY_UP){
             mvaddch(data->friend.y - 1, data->friend.x - 1, '*');
@@ -290,7 +290,7 @@ void* render(void *thread_data){
         if(data->enemy.key == KEY_UP){
             mvaddch(data->enemy.y - 1, data->enemy.x - 1, '*');
             mvaddch(data->enemy.y - 1, data->enemy.x, ' ');
-            mvaddch(data->enemy.y - 1, data->friend.x + 1, '*');
+            mvaddch(data->enemy.y - 1, data->enemy.x + 1, '*');
             mvaddch(data->enemy.y, data->enemy.x - 1, '*');
             mvaddch(data->enemy.y, data->enemy.x, '*');
             mvaddch(data->enemy.y, data->enemy.x + 1, '*');
@@ -325,7 +325,7 @@ void* render(void *thread_data){
         if(data->enemy.key == KEY_DOWN){
             mvaddch(data->enemy.y - 1, data->enemy.x - 1, '*');
             mvaddch(data->enemy.y - 1, data->enemy.x, '*');
-            mvaddch(data->enemy.y - 1, data->friend.x + 1, '*');
+            mvaddch(data->enemy.y - 1, data->enemy.x + 1, '*');
             mvaddch(data->enemy.y, data->enemy.x - 1, '*');
             mvaddch(data->enemy.y, data->enemy.x, '*');
             mvaddch(data->enemy.y, data->enemy.x + 1, '*');
@@ -361,7 +361,7 @@ void* render(void *thread_data){
         {
             mvaddch(data->enemy.y - 1, data->enemy.x - 1, '*');
             mvaddch(data->enemy.y - 1, data->enemy.x, '*');
-            mvaddch(data->enemy.y - 1, data->friend.x + 1, '*');
+            mvaddch(data->enemy.y - 1, data->enemy.x + 1, '*');
             mvaddch(data->enemy.y, data->enemy.x - 1, '*');
             mvaddch(data->enemy.y, data->enemy.x, '*');
             mvaddch(data->enemy.y, data->enemy.x + 1, ' ');
@@ -396,7 +396,7 @@ void* render(void *thread_data){
         if(data->enemy.key == KEY_LEFT){
             mvaddch(data->enemy.y - 1, data->enemy.x - 1, '*');
             mvaddch(data->enemy.y - 1, data->enemy.x, '*');
-            mvaddch(data->enemy.y - 1, data->friend.x + 1, '*');
+            mvaddch(data->enemy.y - 1, data->enemy.x + 1, '*');
             mvaddch(data->enemy.y, data->enemy.x - 1, ' ');
             mvaddch(data->enemy.y, data->enemy.x, '*');
             mvaddch(data->enemy.y, data->enemy.x + 1, '*');
@@ -435,7 +435,7 @@ void* render(void *thread_data){
         refresh();
 
 
-        pthread_mutex_unlock(&mutex);
+        //pthread_mutex_unlock(&mutex);
     }
 }
 
@@ -450,7 +450,7 @@ int main(int argc, char *argv[])
     threadData.enemy.condition_player_2 = 0;
     threadData.friend.x = 1;
     threadData.friend.y = 10;
-    threadData.enemy.x = 40;
+    threadData.enemy.x = 80;
     threadData.enemy.y = 10;
     threadData.friend.condition_ammunition = 0;
     threadData.enemy.condition_ammunition = 0;
