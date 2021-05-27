@@ -450,8 +450,8 @@ int main(int argc, char *argv[])
     threadData.enemy.condition_player_2 = 0;
     threadData.friend.x = 1;
     threadData.friend.y = 10;
-    threadData.enemy.x = 10;
-    threadData.enemy.y = 15;
+    threadData.enemy.x = 40;
+    threadData.enemy.y = 10;
     threadData.friend.condition_ammunition = 0;
     threadData.enemy.condition_ammunition = 0;
     threadData.friend.end = 0;
