@@ -111,7 +111,7 @@ void *udp_server(void *thread_data)
             if (FD_ISSET(sock, &readfd))
             {
                 recvfrom(sock, &ch, sizeof(ch), 0, (struct sockaddr *)&addr, &addr_len);
-                if(strcmp(data->friend.ip_1, inet_ntoa(addr.sin_addr))){
+                if(!strcmp(data->friend.ip_1, inet_ntoa(addr.sin_addr))){
                     if(ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_UP || ch == KEY_DOWN){
                         data->friend.key = ch;
                     }
@@ -120,7 +120,7 @@ void *udp_server(void *thread_data)
                     }
                     tank(ch, data);
                 }
-                if(strcmp(data->enemy.ip_2, inet_ntoa(addr.sin_addr))){
+                if(!strcmp(data->enemy.ip_2, inet_ntoa(addr.sin_addr))){
                     if(ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_UP || ch == KEY_DOWN){
                         data->enemy.key = ch;
                     }
@@ -450,8 +450,8 @@ int main(int argc, char *argv[])
     threadData.enemy.condition_player_2 = 0;
     threadData.friend.x = 1;
     threadData.friend.y = 10;
-    threadData.enemy.x = COLS - 1;
-    threadData.enemy.y = 10;
+    threadData.enemy.x = 10;
+    threadData.enemy.y = 15;
     threadData.friend.condition_ammunition = 0;
     threadData.enemy.condition_ammunition = 0;
     threadData.friend.end = 0;
