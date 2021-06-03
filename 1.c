@@ -49,7 +49,7 @@ int work_flag = 1;
 great_data tank_friend(int ch, great_data* data){
     if(data->friend.key == KEY_UP){
         data->friend.y--;
-        if(abs(data->friend.x - data->enemy.x) < 3 && (data->friend.y - data->enemy.y) == 3){
+        if(abs(data->friend.x - data->enemy.x) < 3 && (data->enemy.y - data->friend.y) == 3){
             data->friend.y++;
         }
         if(data->friend.y == 1){
@@ -66,22 +66,22 @@ great_data tank_friend(int ch, great_data* data){
         }
     }
     if (data->friend.key == KEY_RIGHT)
-    {
-        
-        if(abs(data->friend.y - data->enemy.y) < 3 && (data->friend.x - data->enemy.x) == 3){
+    {   
+        data->friend.x++;     
+        if(abs(data->friend.y - data->enemy.y) < 3 && (data->enemy.x - data->friend.x) == 3){
             data->friend.x--;
         }
-        else{
-            data->friend.x++;
-        }
+
         if(data->friend.x == WIDTH - 1){
             data->friend.x--;
         }
     }
     if(data->friend.key == KEY_LEFT){
-        data->friend.x--;
         if(abs(data->friend.y - data->enemy.y) < 3 && (data->enemy.x - data->friend.x) == 3){
-            data->friend.x++;
+            
+        }
+        else{
+            data->friend.x--;
         }
         if(data->friend.x == 1){
             data->friend.x++;
@@ -104,7 +104,7 @@ great_data tank_enemy(int ch, great_data* data){
     }
     if(data->enemy.key == KEY_DOWN){
         data->enemy.y++;
-        if(abs(data->friend.x - data->enemy.x) < 3 && (data->enemy.y - data->friend.y) == 3){
+        if(abs(data->friend.x - data->enemy.x) < 3 && (data->friend.y - data->friend.y) == 3){
             data->enemy.y--;
         }
         if(data->enemy.y == HEIGHT){
@@ -113,19 +113,23 @@ great_data tank_enemy(int ch, great_data* data){
     }
     if (data->enemy.key == KEY_RIGHT)
     {
-        data->enemy.x++;
-        if(abs(data->friend.y - data->enemy.y) < 3 && (data->friend.x - data->enemy.x) == 3){
-            data->enemy.x--;
+        
+        if(abs(data->friend.y - data->enemy.y) < 3 && (data->enemy.x - data->friend.x) == 3){
+            
+        }
+        else{
+            data->enemy.x++;
         }
         if(data->enemy.x == WIDTH - 1){
             data->enemy.x--;
         }
     }
     if(data->enemy.key == KEY_LEFT){
-        data->enemy.x--;
-        if(abs(data->friend.y - data->enemy.y) < 3 && (data->enemy.x - data->friend.x) == 3){
+        data->enemy.x--;     
+        if(abs(data->enemy.y - data->friend.y) < 3 && (data->friend.x - data->enemy.x) == 3){
             data->enemy.x++;
         }
+
         if(data->enemy.x == 1){
             data->enemy.x++;
         }
