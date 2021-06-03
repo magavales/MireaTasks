@@ -7,13 +7,15 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <ncurses.h>
+#include <math.h>
+#include <stdlib.h>
 #ifndef PORT
 #define PORT 9999
 #define MAIN_COLOR 1
 #define FRIEND_COLOR 2
 #define ENEMY_COLOR 3
 #define HEIGHT 40
-#define WIDTH 80 
+#define WIDTH 100 
 #endif
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 WINDOW *game_win;
@@ -24,10 +26,9 @@ int begin = 0;
 typedef struct{
     int x;
     int y;
-    int hit;
     int key;
     int cannon;
-    int memory_canon;
+    int memory_canon[3];
     int x_ammunition[3];
     int y_ammunition[3];
     int condition_ammunition[3];
@@ -48,7 +49,7 @@ int work_flag = 1;
 great_data tank_friend(int ch, great_data* data){
     if(data->friend.key == KEY_UP){
         data->friend.y--;
-        if((data->friend.x + 1 == data->enemy.x - 1 || data->friend.x == data->enemy.x || data->friend.x - 1 == data->enemy.x + 1) && (data->friend.y + 1 == data->enemy.y - 1 || data->friend.y == data->enemy.y || data->friend.y - 1 == data->enemy.y + 1)){
+        if(abs(data->friend.x - data->enemy.x) < 3 && (data->friend.y - data->enemy.y) == 3){
             data->friend.y++;
         }
         if(data->friend.y == 1){
@@ -57,7 +58,7 @@ great_data tank_friend(int ch, great_data* data){
     }
     if(data->friend.key == KEY_DOWN){
         data->friend.y++;
-        if((data->friend.x + 1 == data->enemy.x - 1 || data->friend.x == data->enemy.x || data->friend.x - 1 == data->enemy.x + 1) && (data->friend.y + 1 == data->enemy.y - 1 || data->friend.y == data->enemy.y || data->friend.y - 1 == data->enemy.y + 1)){
+        if(abs(data->friend.x - data->enemy.x) < 3 && (data->enemy.y - data->friend.y) == 3){
             data->friend.y--;
         }
         if(data->friend.y == HEIGHT ){
@@ -66,9 +67,12 @@ great_data tank_friend(int ch, great_data* data){
     }
     if (data->friend.key == KEY_RIGHT)
     {
-        data->friend.x++;
-        if((data->friend.x + 1 == data->enemy.x - 1 || data->friend.x == data->enemy.x || data->friend.x - 1 == data->enemy.x + 1) && (data->friend.y + 1 == data->enemy.y - 1 || data->friend.y == data->enemy.y || data->friend.y - 1 == data->enemy.y + 1)){
+        
+        if(abs(data->friend.y - data->enemy.y) < 3 && (data->friend.x - data->enemy.x) == 3){
             data->friend.x--;
+        }
+        else{
+            data->friend.x++;
         }
         if(data->friend.x == WIDTH - 1){
             data->friend.x--;
@@ -76,7 +80,7 @@ great_data tank_friend(int ch, great_data* data){
     }
     if(data->friend.key == KEY_LEFT){
         data->friend.x--;
-        if((data->friend.x + 1 == data->enemy.x - 1 || data->friend.x == data->enemy.x || data->friend.x - 1 == data->enemy.x + 1) && (data->friend.y + 1 == data->enemy.y - 1 || data->friend.y == data->enemy.y || data->friend.y - 1 == data->enemy.y + 1)){
+        if(abs(data->friend.y - data->enemy.y) < 3 && (data->enemy.x - data->friend.x) == 3){
             data->friend.x++;
         }
         if(data->friend.x == 1){
@@ -91,7 +95,7 @@ great_data tank_friend(int ch, great_data* data){
 great_data tank_enemy(int ch, great_data* data){
     if(data->enemy.key == KEY_UP){
         data->enemy.y--;
-        if((data->enemy.x + 1 == data->friend.x - 1 || data->enemy.x == data->friend.x || data->enemy.x - 1 == data->friend.x + 1) && (data->enemy.y + 1 == data->friend.y - 1 || data->enemy.y == data->friend.y || data->enemy.y - 1 == data->friend.y + 1)){
+        if(abs(data->friend.x - data->enemy.x) < 3 && (data->friend.y - data->enemy.y) == 3){
             data->enemy.y++;
         }
         if(data->enemy.y == 1){
@@ -100,7 +104,7 @@ great_data tank_enemy(int ch, great_data* data){
     }
     if(data->enemy.key == KEY_DOWN){
         data->enemy.y++;
-        if((data->enemy.x + 1 == data->friend.x - 1 || data->enemy.x == data->friend.x || data->enemy.x - 1 == data->friend.x + 1) && (data->enemy.y + 1 == data->friend.y - 1 || data->enemy.y == data->friend.y || data->enemy.y - 1 == data->friend.y + 1)){
+        if(abs(data->friend.x - data->enemy.x) < 3 && (data->enemy.y - data->friend.y) == 3){
             data->enemy.y--;
         }
         if(data->enemy.y == HEIGHT){
@@ -110,7 +114,7 @@ great_data tank_enemy(int ch, great_data* data){
     if (data->enemy.key == KEY_RIGHT)
     {
         data->enemy.x++;
-        if((data->enemy.x + 1 == data->friend.x - 1 || data->enemy.x == data->friend.x || data->enemy.x - 1 == data->friend.x + 1) && (data->enemy.y + 1 == data->friend.y - 1 || data->enemy.y == data->friend.y || data->enemy.y - 1 == data->friend.y + 1)){
+        if(abs(data->friend.y - data->enemy.y) < 3 && (data->friend.x - data->enemy.x) == 3){
             data->enemy.x--;
         }
         if(data->enemy.x == WIDTH - 1){
@@ -119,7 +123,7 @@ great_data tank_enemy(int ch, great_data* data){
     }
     if(data->enemy.key == KEY_LEFT){
         data->enemy.x--;
-        if((data->enemy.x + 1 == data->friend.x - 1 || data->enemy.x == data->friend.x || data->enemy.x - 1 == data->friend.x + 1) && (data->enemy.y + 1 == data->friend.y - 1 || data->enemy.y == data->friend.y || data->enemy.y - 1 == data->friend.y + 1)){
+        if(abs(data->friend.y - data->enemy.y) < 3 && (data->enemy.x - data->friend.x) == 3){
             data->enemy.x++;
         }
         if(data->enemy.x == 1){
@@ -148,6 +152,18 @@ void *udp_server(void *thread_data)
         perror("socket");
         return NULL;
     }
+
+    // Нужно для работы моей VPN сети
+    #ifdef VPN_ENABLED
+    char *devname = "tap0";
+    ret = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, devname,
+    strlen(devname));
+    if (ret == -1)
+    {
+        perror("setsockopt");
+    return 0;
+    }
+    #endif
 
     addr_len = sizeof(struct sockaddr_in);
     memset((void *)&addr, 0, addr_len);
@@ -186,7 +202,7 @@ void *udp_server(void *thread_data)
                         for(int i = 0; i < 3; i++){
                             if(data->friend.condition_ammunition[i] != 1){
                                 data->friend.condition_ammunition[i] = 1;
-                                data->friend.memory_canon = data->friend.cannon;
+                                data->friend.memory_canon[i] = data->friend.cannon;
                                 if(data->friend.cannon == 'Q' || data->friend.cannon == 'q'){
                                     data->friend.x_ammunition[i] = data->friend.x - 1;
                                     data->friend.y_ammunition[i] = data->friend.y - 1;
@@ -236,7 +252,7 @@ void *udp_server(void *thread_data)
                         for(int i = 0; i < 3; i++){
                             if(data->enemy.condition_ammunition[i] != 1){
                                 data->enemy.condition_ammunition[i] = 1;
-                                data->enemy.memory_canon = data->enemy.cannon;
+                                data->enemy.memory_canon[i] = data->enemy.cannon;
                                 if(data->enemy.cannon == 'Q' || data->enemy.cannon == 'q'){
                                     data->enemy.x_ammunition[i] = data->enemy.x - 1;
                                     data->enemy.y_ammunition[i] = data->enemy.y - 1;
@@ -287,14 +303,14 @@ void *udp_server(void *thread_data)
 void* strike(void* thread_data){
     great_data *data = (great_data *)thread_data;
     while(count_game != 1){
-        usleep(20000);
+        usleep(50000);
 
 
         for(int i = 0; i < 3; i++){
             if (data->friend.condition_ammunition[i] == 1)
             {
 
-                if (data->friend.memory_canon == 'Q' || data->friend.memory_canon == 'q')
+                if (data->friend.memory_canon[i] == 'Q' || data->friend.memory_canon[i] == 'q')
                 {
                     data->friend.y_ammunition[i]--;
                     data->friend.x_ammunition[i]--;
@@ -304,16 +320,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->friend.y_ammunition[i] == data->enemy.y || data->friend.y_ammunition[i] == data->enemy.y - 1 || data->friend.y_ammunition[i] == data->enemy.y + 1) && (data->friend.x_ammunition[i] == data->enemy.x || data->friend.x_ammunition[i] == data->enemy.x - 1 || data->friend.x_ammunition[i] == data->enemy.x + 1)){
-                        data->enemy.hit++;
-                        data->enemy.condition_player = 2;
-                        if(data->enemy.hit == 3){
-                            count_game = 1;
-                            data->enemy.condition_player = 1;
-                        }
+                        data->enemy.condition_player = 1;
+                        count_game = 1;
                         data->friend.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->friend.memory_canon == 'W' || data->friend.memory_canon == 'w')
+                if (data->friend.memory_canon[i] == 'W' || data->friend.memory_canon[i] == 'w')
                 {
                     data->friend.y_ammunition[i]--;
 
@@ -322,16 +334,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->friend.y_ammunition[i] == data->enemy.y || data->friend.y_ammunition[i] == data->enemy.y - 1 || data->friend.y_ammunition[i] == data->enemy.y + 1) && (data->friend.x_ammunition[i] == data->enemy.x || data->friend.x_ammunition[i] == data->enemy.x - 1 || data->friend.x_ammunition[i] == data->enemy.x + 1)){
-                        data->enemy.hit++;
-                        data->enemy.condition_player = 2;
-                        if(data->enemy.hit == 3){
-                            count_game = 1;
-                            data->enemy.condition_player = 1;
-                        }
+                        data->enemy.condition_player = 1;
+                        count_game = 1;
                         data->friend.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->friend.memory_canon == 'E' || data->friend.memory_canon == 'e')
+                if (data->friend.memory_canon[i] == 'E' || data->friend.memory_canon[i] == 'e')
                 {
                     data->friend.y_ammunition[i]--;
                     data->friend.x_ammunition[i]++;
@@ -341,16 +349,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->friend.y_ammunition[i] == data->enemy.y || data->friend.y_ammunition[i] == data->enemy.y - 1 || data->friend.y_ammunition[i] == data->enemy.y + 1) && (data->friend.x_ammunition[i] == data->enemy.x || data->friend.x_ammunition[i] == data->enemy.x - 1 || data->friend.x_ammunition[i] == data->enemy.x + 1)){
-                        data->enemy.hit++;
-                        data->enemy.condition_player = 2;
-                        if(data->enemy.hit == 3){
-                            count_game = 1;
-                            data->enemy.condition_player = 1;
-                        }
+                        data->enemy.condition_player = 1;
+                        count_game = 1;
                         data->friend.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->friend.memory_canon == 'D' || data->friend.memory_canon == 'd')
+                if (data->friend.memory_canon[i] == 'D' || data->friend.memory_canon[i] == 'd')
                 {
                     data->friend.x_ammunition[i]++;
 
@@ -359,16 +363,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->friend.y_ammunition[i] == data->enemy.y || data->friend.y_ammunition[i] == data->enemy.y - 1 || data->friend.y_ammunition[i] == data->enemy.y + 1) && (data->friend.x_ammunition[i] == data->enemy.x || data->friend.x_ammunition[i] == data->enemy.x - 1 || data->friend.x_ammunition[i] == data->enemy.x + 1)){
-                        data->enemy.hit++;
-                        data->enemy.condition_player = 2;
-                        if(data->enemy.hit == 3){
-                            count_game = 1;
-                            data->enemy.condition_player = 1;
-                        }
+                        data->enemy.condition_player = 1;
+                        count_game = 1;
                         data->friend.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->friend.memory_canon == 'C' || data->friend.memory_canon == 'c')
+                if (data->friend.memory_canon[i] == 'C' || data->friend.memory_canon[i] == 'c')
                 {
                     data->friend.y_ammunition[i]++;
                     data->friend.x_ammunition[i]++;
@@ -378,16 +378,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->friend.y_ammunition[i] == data->enemy.y || data->friend.y_ammunition[i] == data->enemy.y - 1 || data->friend.y_ammunition[i] == data->enemy.y + 1) && (data->friend.x_ammunition[i] == data->enemy.x || data->friend.x_ammunition[i] == data->enemy.x - 1 || data->friend.x_ammunition[i] == data->enemy.x + 1)){
-                        data->enemy.hit++;
-                        data->enemy.condition_player = 2;
-                        if(data->enemy.hit == 3){
-                            count_game = 1;
-                            data->enemy.condition_player = 1;
-                        }
+                        data->enemy.condition_player = 1;
+                        count_game = 1;
                         data->friend.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->friend.memory_canon == 'X' || data->friend.memory_canon == 'x')
+                if (data->friend.memory_canon[i] == 'X' || data->friend.memory_canon[i] == 'x')
                 {
                     data->friend.y_ammunition[i]++;
 
@@ -396,16 +392,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->friend.y_ammunition[i] == data->enemy.y || data->friend.y_ammunition[i] == data->enemy.y - 1 || data->friend.y_ammunition[i] == data->enemy.y + 1) && (data->friend.x_ammunition[i] == data->enemy.x || data->friend.x_ammunition[i] == data->enemy.x - 1 || data->friend.x_ammunition[i] == data->enemy.x + 1)){
-                        data->enemy.hit++;
-                        data->enemy.condition_player = 2;
-                        if(data->enemy.hit == 3){
-                            count_game = 1;
-                            data->enemy.condition_player = 1;
-                        }
+                        data->enemy.condition_player = 1;
+                        count_game = 1;
                         data->friend.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->friend.memory_canon == 'Z' || data->friend.memory_canon == 'z')
+                if (data->friend.memory_canon[i] == 'Z' || data->friend.memory_canon[i] == 'z')
                 {
                     data->friend.y_ammunition[i]++;
                     data->friend.x_ammunition[i]--;
@@ -415,16 +407,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->friend.y_ammunition[i] == data->enemy.y || data->friend.y_ammunition[i] == data->enemy.y - 1 || data->friend.y_ammunition[i] == data->enemy.y + 1) && (data->friend.x_ammunition[i] == data->enemy.x || data->friend.x_ammunition[i] == data->enemy.x - 1 || data->friend.x_ammunition[i] == data->enemy.x + 1)){
-                        data->enemy.hit++;
-                        data->enemy.condition_player = 2;
-                        if(data->enemy.hit == 3){
-                            count_game = 1;
-                            data->enemy.condition_player = 1;
-                        }
+                        data->enemy.condition_player = 1;
+                        count_game = 1;
                         data->friend.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->friend.memory_canon == 'A' || data->friend.memory_canon == 'a')
+                if (data->friend.memory_canon[i] == 'A' || data->friend.memory_canon[i] == 'a')
                 {
                     data->friend.x_ammunition[i]--;
 
@@ -433,12 +421,8 @@ void* strike(void* thread_data){
                     }
 
                     if((data->friend.y_ammunition[i] == data->enemy.y || data->friend.y_ammunition[i] == data->enemy.y - 1 || data->friend.y_ammunition[i] == data->enemy.y + 1) && (data->friend.x_ammunition[i] == data->enemy.x || data->friend.x_ammunition[i] == data->enemy.x - 1 || data->friend.x_ammunition[i] == data->enemy.x + 1)){
-                        data->enemy.hit++;
-                        data->enemy.condition_player = 2;
-                        if(data->enemy.hit == 3){
-                            count_game = 1;
-                            data->enemy.condition_player = 1;
-                        }
+                        data->enemy.condition_player = 1;
+                        count_game = 1;
                         data->friend.condition_ammunition[i] = 0;
                     }
                 }
@@ -449,7 +433,7 @@ void* strike(void* thread_data){
             if (data->enemy.condition_ammunition[i] == 1)
             {
 
-                if (data->enemy.memory_canon == 'Q' || data->enemy.memory_canon == 'q')
+                if (data->enemy.memory_canon[i] == 'Q' || data->enemy.memory_canon[i] == 'q')
                 {
                     data->enemy.y_ammunition[i]--;
                     data->enemy.x_ammunition[i]--;
@@ -458,33 +442,25 @@ void* strike(void* thread_data){
                         data->enemy.condition_ammunition[i] = 0;
                     }
                     if((data->enemy.y_ammunition[i] == data->friend.y || data->enemy.y_ammunition[i] == data->friend.y - 1 || data->enemy.y_ammunition[i] == data->friend.y + 1) && (data->enemy.x_ammunition[i] == data->friend.x || data->enemy.x_ammunition[i] == data->friend.x - 1 || data->enemy.x_ammunition[i] == data->friend.x + 1)){
-                        data->friend.hit++;
-                        data->friend.condition_player = 2;
-                        if(data->friend.hit == 3){
-                            count_game = 1;
-                            data->friend.condition_player = 1;
-                        }
+                        data->friend.condition_player = 1;
+                        count_game = 1;
                         data->enemy.condition_ammunition[i] = 0;
                     }
 
                 }
-                if (data->enemy.memory_canon == 'W' || data->enemy.memory_canon == 'w')
+                if (data->enemy.memory_canon[i] == 'W' || data->enemy.memory_canon[i] == 'w')
                 {
                     data->enemy.y_ammunition[i]--;
                     if(data->enemy.y_ammunition[i] == -1){
                         data->enemy.condition_ammunition[i] = 0;
                     }
                     if((data->enemy.y_ammunition[i] == data->friend.y || data->enemy.y_ammunition[i] == data->friend.y - 1 || data->enemy.y_ammunition[i] == data->friend.y + 1) && (data->enemy.x_ammunition[i] == data->friend.x || data->enemy.x_ammunition[i] == data->friend.x - 1 || data->enemy.x_ammunition[i] == data->friend.x + 1)){
-                        data->friend.hit++;
-                        data->friend.condition_player = 2;
-                        if(data->friend.hit == 3){
-                            count_game = 1;
-                            data->friend.condition_player = 1;
-                        }
+                        data->friend.condition_player = 1;
+                        count_game = 1;
                         data->enemy.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->enemy.memory_canon == 'E' || data->enemy.memory_canon == 'e')
+                if (data->enemy.memory_canon[i] == 'E' || data->enemy.memory_canon[i] == 'e')
                 {
                     data->enemy.y_ammunition[i]--;
                     data->enemy.x_ammunition[i]++;
@@ -494,16 +470,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->enemy.y_ammunition[i] == data->friend.y || data->enemy.y_ammunition[i] == data->friend.y - 1 || data->enemy.y_ammunition[i] == data->friend.y + 1) && (data->enemy.x_ammunition[i] == data->friend.x || data->enemy.x_ammunition[i] == data->friend.x - 1 || data->enemy.x_ammunition[i] == data->friend.x + 1)){
-                        data->friend.hit++;
-                        data->friend.condition_player = 2;
-                        if(data->friend.hit == 3){
-                            count_game = 1;
-                            data->friend.condition_player = 1;
-                        }
+                        data->friend.condition_player = 1;
+                        count_game = 1;
                         data->enemy.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->enemy.memory_canon == 'D' || data->enemy.memory_canon == 'd')
+                if (data->enemy.memory_canon[i] == 'D' || data->enemy.memory_canon[i] == 'd')
                 {
                     data->enemy.x_ammunition[i]++;
 
@@ -512,16 +484,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->enemy.y_ammunition[i] == data->friend.y || data->enemy.y_ammunition[i] == data->friend.y - 1 || data->enemy.y_ammunition[i] == data->friend.y + 1) && (data->enemy.x_ammunition[i] == data->friend.x || data->enemy.x_ammunition[i] == data->friend.x - 1 || data->enemy.x_ammunition[i] == data->friend.x + 1)){
-                        data->friend.hit++;
-                        data->friend.condition_player = 2;
-                        if(data->friend.hit == 3){
-                            count_game = 1;
-                            data->friend.condition_player = 1;
-                        }
+                        data->friend.condition_player = 1;
+                        count_game = 1;
                         data->enemy.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->enemy.memory_canon == 'C' || data->enemy.memory_canon == 'c')
+                if (data->enemy.memory_canon[i] == 'C' || data->enemy.memory_canon[i] == 'c')
                 {
                     data->enemy.y_ammunition[i]++;
                     data->enemy.x_ammunition[i]++;
@@ -531,16 +499,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->enemy.y_ammunition[i] == data->friend.y || data->enemy.y_ammunition[i] == data->friend.y - 1 || data->enemy.y_ammunition[i] == data->friend.y + 1) && (data->enemy.x_ammunition[i] == data->friend.x || data->enemy.x_ammunition[i] == data->friend.x - 1 || data->enemy.x_ammunition[i] == data->friend.x + 1)){
-                        data->friend.hit++;
-                        data->friend.condition_player = 2;
-                        if(data->friend.hit == 3){
-                            count_game = 1;
-                            data->friend.condition_player = 1;
-                        }
+                        data->friend.condition_player = 1;
+                        count_game = 1;
                         data->enemy.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->enemy.memory_canon == 'X' || data->enemy.memory_canon == 'x')
+                if (data->enemy.memory_canon[i] == 'X' || data->enemy.memory_canon[i] == 'x')
                 {
                     data->enemy.y_ammunition[i]++;
 
@@ -549,16 +513,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->enemy.y_ammunition[i] == data->friend.y || data->enemy.y_ammunition[i] == data->friend.y - 1 || data->enemy.y_ammunition[i] == data->friend.y + 1) && (data->enemy.x_ammunition[i] == data->friend.x || data->enemy.x_ammunition[i] == data->friend.x - 1 || data->enemy.x_ammunition[i] == data->friend.x + 1)){
-                        data->friend.hit++;
-                        data->friend.condition_player = 2;
-                        if(data->friend.hit == 3){
-                            count_game = 1;
-                            data->friend.condition_player = 1;
-                        }
+                        data->friend.condition_player = 1;
+                        count_game = 1;
                         data->enemy.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->enemy.memory_canon == 'Z' || data->enemy.memory_canon == 'z')
+                if (data->enemy.memory_canon[i] == 'Z' || data->enemy.memory_canon[i] == 'z')
                 {
                     data->enemy.y_ammunition[i]++;
                     data->enemy.x_ammunition[i]--;
@@ -568,16 +528,12 @@ void* strike(void* thread_data){
                     }
 
                     if((data->enemy.y_ammunition[i] == data->friend.y || data->enemy.y_ammunition[i] == data->friend.y - 1 || data->enemy.y_ammunition[i] == data->friend.y + 1) && (data->enemy.x_ammunition[i] == data->friend.x || data->enemy.x_ammunition[i] == data->friend.x - 1 || data->enemy.x_ammunition[i] == data->friend.x + 1)){
-                        data->friend.hit++;
-                        data->friend.condition_player = 2;
-                        if(data->friend.hit == 3){
-                            count_game = 1;
-                            data->friend.condition_player = 1;
-                        }
+                        data->friend.condition_player = 1;
+                        count_game = 1;
                         data->enemy.condition_ammunition[i] = 0;
                     }
                 }
-                if (data->enemy.memory_canon == 'A' || data->enemy.memory_canon == 'a')
+                if (data->enemy.memory_canon[i] == 'A' || data->enemy.memory_canon[i] == 'a')
                 {
                     data->enemy.x_ammunition[i]--;
 
@@ -586,12 +542,8 @@ void* strike(void* thread_data){
                     }
 
                     if((data->enemy.y_ammunition[i] == data->friend.y || data->enemy.y_ammunition[i] == data->friend.y - 1 || data->enemy.y_ammunition[i] == data->friend.y + 1) && (data->enemy.x_ammunition[i] == data->friend.x || data->enemy.x_ammunition[i] == data->friend.x - 1 || data->enemy.x_ammunition[i] == data->friend.x + 1)){
-                        data->friend.hit++;
-                        data->friend.condition_player = 2;
-                        if(data->friend.hit == 3){
-                            count_game = 1;
-                            data->friend.condition_player = 1;
-                        }
+                        data->friend.condition_player = 1;
+                        count_game = 1;
                         data->enemy.condition_ammunition[i] = 0;
                     }
                 }
@@ -603,24 +555,48 @@ void* strike(void* thread_data){
 
 void* render(void *thread_data){
     char* red_win = "Red WIN!";
-    char* green_win = "Green WIN!";
-    char* begin_win = "Press any ARROW keys for start!";
+    char* blue_win = "Blue WIN!";
     char* exit_win = "Press SOME keys for exit!";
     great_data *data = (great_data *)thread_data;
 
 
     while(count_game != 1){
-        usleep(16000);
+        usleep(1000000 / 120);
         pthread_mutex_lock(&mutex);
         werase(game_win);
         box(game_win, '|', '-');
+        if(begin == 0){
+            wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
+            mvwaddch(game_win, data->friend.y - 1, data->friend.x - 1, '*');
+            mvwaddch(game_win, data->friend.y - 1, data->friend.x, '*');
+            mvwaddch(game_win, data->friend.y - 1, data->friend.x + 1, '*');
+            mvwaddch(game_win, data->friend.y, data->friend.x - 1, '*');
+            mvwaddch(game_win, data->friend.y, data->friend.x, '*');
+            mvwaddch(game_win, data->friend.y, data->friend.x + 1, '-');
+            mvwaddch(game_win, data->friend.y + 1, data->friend.x - 1, '*');
+            mvwaddch(game_win, data->friend.y + 1, data->friend.x, '*');
+            mvwaddch(game_win, data->friend.y + 1, data->friend.x + 1, '*');
+            wattroff(game_win, COLOR_PAIR(FRIEND_COLOR));
+
+            wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
+            mvwaddch(game_win, data->enemy.y - 1, data->enemy.x - 1, '*');
+            mvwaddch(game_win, data->enemy.y - 1, data->enemy.x, '*');
+            mvwaddch(game_win, data->enemy.y - 1, data->enemy.x + 1, '*');
+            mvwaddch(game_win, data->enemy.y, data->enemy.x - 1, '-');
+            mvwaddch(game_win, data->enemy.y, data->enemy.x, '*');
+            mvwaddch(game_win, data->enemy.y, data->enemy.x + 1, '*');
+            mvwaddch(game_win, data->enemy.y + 1, data->enemy.x - 1, '*');
+            mvwaddch(game_win, data->enemy.y + 1, data->enemy.x, '*');
+            mvwaddch(game_win, data->enemy.y + 1, data->enemy.x + 1, '*');
+            wattroff(game_win, COLOR_PAIR(ENEMY_COLOR));
+        }
         if(data->friend.key == KEY_UP){
             begin = 1;
 
             if(data->friend.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
             }
-            if(data->friend.condition_player == 2){
+            if(data->friend.condition_player == 1){
                 wattron(game_win, COLOR_PAIR(MAIN_COLOR));
             }
             
@@ -666,7 +642,7 @@ void* render(void *thread_data){
             if(data->enemy.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
             }
-            if(data->enemy.condition_player == 2){
+            if(data->enemy.condition_player == 1){
                 wattron(game_win, COLOR_PAIR(MAIN_COLOR));
             }
 
@@ -712,7 +688,7 @@ void* render(void *thread_data){
             if(data->friend.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
             }
-            if(data->friend.condition_player == 2){
+            if(data->friend.condition_player == 1){
                 wattron(game_win, COLOR_PAIR(MAIN_COLOR));
             }
 
@@ -759,7 +735,7 @@ void* render(void *thread_data){
             if(data->friend.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
             }
-            if(data->friend.condition_player == 2){
+            if(data->friend.condition_player == 1){
                 wattron(game_win, COLOR_PAIR(MAIN_COLOR));
             }
 
@@ -804,7 +780,7 @@ void* render(void *thread_data){
             if(data->friend.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
             }
-            if(data->friend.condition_player == 2){
+            if(data->friend.condition_player == 1){
                 wattron(game_win, COLOR_PAIR(MAIN_COLOR));
             }
             mvwaddch(game_win, data->friend.y - 1, data->friend.x - 1, '*');
@@ -850,7 +826,7 @@ void* render(void *thread_data){
             if(data->enemy.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
             }
-            if(data->enemy.condition_player == 2){
+            if(data->enemy.condition_player == 1){
                 wattron(game_win, COLOR_PAIR(MAIN_COLOR));
             }
 
@@ -897,7 +873,7 @@ void* render(void *thread_data){
             if(data->enemy.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
             }
-            if(data->enemy.condition_player == 2){
+            if(data->enemy.condition_player == 1){
                 wattron(game_win, COLOR_PAIR(MAIN_COLOR));
             }
 
@@ -943,7 +919,7 @@ void* render(void *thread_data){
             if(data->enemy.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
             }
-            if(data->enemy.condition_player == 2){
+            if(data->enemy.condition_player == 1){
                 wattron(game_win, COLOR_PAIR(MAIN_COLOR));
             }
 
@@ -999,26 +975,23 @@ void* render(void *thread_data){
         
         if(count_game == 1 && data->friend.condition_player == 1){
             wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
-            mvwaddstr(game_win, HEIGHT / 2, WIDTH / 2 - 5, red_win);
+            mvwaddstr(game_win, HEIGHT / 2, WIDTH / 2 - 6, blue_win);
             wattroff(game_win, COLOR_PAIR(ENEMY_COLOR));
             mvwaddstr(game_win, HEIGHT - 2, WIDTH / 2 - 13, exit_win);
         }
         
         if(count_game == 1 && data->enemy.condition_player == 1){
             wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
-            mvwaddstr(game_win, HEIGHT / 2, WIDTH / 2 - 6, green_win);
+            mvwaddstr(game_win, HEIGHT / 2, WIDTH / 2 - 5, red_win);
             wattroff(game_win, COLOR_PAIR(FRIEND_COLOR));
             mvwaddstr(game_win, HEIGHT - 2, WIDTH / 2 - 13, exit_win);
         }
         
-        if(begin == 0){
-            mvwaddstr(game_win, HEIGHT/2, WIDTH / 2 - 12, begin_win);
-            
-        }
+        
 
         wrefresh(game_win);
 
-        if(data->friend.condition_player == 2 || data->enemy.condition_player == 2){
+        if(data->friend.condition_player == 1 || data->enemy.condition_player == 1){
             usleep(16000);
         }
 
@@ -1051,16 +1024,14 @@ int main(int argc, char *argv[])
     threadData.enemy.ip = argv[2];
     threadData.friend.condition_player = 0;
     threadData.enemy.condition_player = 0;
-    threadData.friend.hit = 0;
-    threadData.enemy.hit = 0;
     threadData.friend.cannon = 'd';
     threadData.enemy.cannon = 'd';
     threadData.friend.key = 'd';
     threadData.enemy.key = 'd';
-    threadData.friend.x = 1;
-    threadData.friend.y = 18;
-    threadData.enemy.x = 78;
-    threadData.enemy.y = 18;
+    threadData.friend.x = 25;
+    threadData.friend.y = 20;
+    threadData.enemy.x = 75;
+    threadData.enemy.y = 20;
     for(int i = 0; i < 3; i++){
         threadData.friend.condition_ammunition[i] = 0;
         threadData.enemy.condition_ammunition[i] = 0;
@@ -1092,8 +1063,8 @@ int main(int argc, char *argv[])
 
     start_color();
     init_pair(MAIN_COLOR, COLOR_WHITE, COLOR_BLACK);
-    init_pair(FRIEND_COLOR, COLOR_GREEN, COLOR_BLACK);
-    init_pair(ENEMY_COLOR, COLOR_RED, COLOR_BLACK);
+    init_pair(FRIEND_COLOR, COLOR_RED, COLOR_BLACK);
+    init_pair(ENEMY_COLOR, COLOR_BLUE, COLOR_BLACK);
 
     int sock, yes = 1;
     pthread_t pid;
@@ -1115,6 +1086,18 @@ int main(int argc, char *argv[])
         perror("sock");
         return -1;
     }
+
+    // Нужно для работы моей VPN сети
+    #ifdef VPN_ENABLED
+    char *devname = "tap0";
+    ret = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, devname,
+    strlen(devname));
+    if (ret == -1)
+    {
+        perror("setsockopt");
+    return 0;
+    }
+    #endif
 
     ret = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char *)&yes, sizeof(yes));
     if (ret == -1)
