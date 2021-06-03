@@ -10,7 +10,7 @@
 #include <math.h>
 #include <stdlib.h>
 #ifndef PORT
-#define PORT 9999
+#define PORT 8888
 #define MAIN_COLOR 1
 #define FRIEND_COLOR 2
 #define ENEMY_COLOR 3
@@ -21,17 +21,18 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 WINDOW *game_win;
 
 int count_game = 0;
-int begin = 0;
+int begin_friend = 0;
+int begin_enemy = 0;
 
 typedef struct{
     int x;
     int y;
     int key;
     int cannon;
-    int memory_canon[3];
-    int x_ammunition[3];
-    int y_ammunition[3];
-    int condition_ammunition[3];
+    int memory_canon[4];
+    int x_ammunition[4];
+    int y_ammunition[4];
+    int condition_ammunition[4];
     int start;
     int end;
     char* ip;
@@ -49,7 +50,7 @@ int work_flag = 1;
 great_data tank_friend(int ch, great_data* data){
     if(data->friend.key == KEY_UP){
         data->friend.y--;
-        if(abs(data->friend.x - data->enemy.x) < 3 && (data->enemy.y - data->friend.y) == 3){
+        if((data->friend.y - 1 == data->enemy.y + 1) && (data->friend.x - 1 == data->enemy.x - 1 || data->friend.x + 1 == data->enemy.x + 1 || data->friend.x == data->enemy.x ||  data->friend.x == data->enemy.x - 1 ||  data->friend.x == data->enemy.x + 1 || data->friend.x - 1 == data->enemy.x + 1 || data->friend.x + 1 == data->enemy.x - 1)){
             data->friend.y++;
         }
         if(data->friend.y == 1){
@@ -58,30 +59,27 @@ great_data tank_friend(int ch, great_data* data){
     }
     if(data->friend.key == KEY_DOWN){
         data->friend.y++;
-        if(abs(data->friend.x - data->enemy.x) < 3 && (data->enemy.y - data->friend.y) == 3){
+        if((data->friend.y + 1 == data->enemy.y - 1) && (data->friend.x - 1 == data->enemy.x - 1 || data->friend.x + 1 == data->enemy.x + 1 || data->friend.x == data->enemy.x ||  data->friend.x == data->enemy.x - 1 ||  data->friend.x == data->enemy.x + 1 || data->friend.x - 1 == data->enemy.x + 1 || data->friend.x + 1 == data->enemy.x - 1)){
             data->friend.y--;
         }
-        if(data->friend.y == HEIGHT ){
+        if(data->friend.y == HEIGHT){
             data->friend.y--;
         }
     }
     if (data->friend.key == KEY_RIGHT)
-    {   
-        data->friend.x++;     
-        if(abs(data->friend.y - data->enemy.y) < 3 && (data->enemy.x - data->friend.x) == 3){
+    {
+        data->friend.x++;
+        if((data->friend.x + 1 == data->enemy.x - 1) && (data->friend.y - 1 == data->enemy.y - 1 || data->friend.y + 1 == data->enemy.y + 1 || data->friend.y == data->enemy.y || data->friend.y == data->enemy.y - 1 || data->friend.y == data->enemy.y + 1 || data->friend.y - 1 == data->enemy.y + 1 || data->friend.y + 1 == data->enemy.y - 1)){
             data->friend.x--;
         }
-
         if(data->friend.x == WIDTH - 1){
             data->friend.x--;
         }
     }
     if(data->friend.key == KEY_LEFT){
-        if(abs(data->friend.y - data->enemy.y) < 3 && (data->enemy.x - data->friend.x) == 3){
-            
-        }
-        else{
-            data->friend.x--;
+        data->friend.x--;
+        if((data->friend.x - 1 == data->enemy.x + 1) && (data->friend.y - 1 == data->enemy.y - 1 || data->friend.y + 1 == data->enemy.y + 1 || data->friend.y == data->enemy.y || data->friend.y == data->enemy.y - 1 || data->friend.y == data->enemy.y + 1 || data->friend.y - 1 == data->enemy.y + 1 || data->friend.y + 1 == data->enemy.y - 1)){
+            data->friend.x++;
         }
         if(data->friend.x == 1){
             data->friend.x++;
@@ -95,7 +93,7 @@ great_data tank_friend(int ch, great_data* data){
 great_data tank_enemy(int ch, great_data* data){
     if(data->enemy.key == KEY_UP){
         data->enemy.y--;
-        if(abs(data->friend.x - data->enemy.x) < 3 && (data->friend.y - data->enemy.y) == 3){
+        if((data->enemy.y - 1 == data->friend.y + 1) && (data->friend.x - 1 == data->enemy.x - 1 || data->friend.x + 1 == data->enemy.x + 1 || data->friend.x == data->enemy.x ||  data->friend.x - 1 == data->enemy.x ||  data->friend.x + 1 == data->enemy.x || data->friend.x - 1 == data->enemy.x + 1 || data->friend.x + 1 == data->enemy.x - 1)){
             data->enemy.y++;
         }
         if(data->enemy.y == 1){
@@ -104,32 +102,28 @@ great_data tank_enemy(int ch, great_data* data){
     }
     if(data->enemy.key == KEY_DOWN){
         data->enemy.y++;
-        if(abs(data->friend.x - data->enemy.x) < 3 && (data->friend.y - data->friend.y) == 3){
+        if((data->enemy.y + 1 == data->friend.y - 1) && (data->friend.x - 1 == data->enemy.x - 1 || data->friend.x + 1 == data->enemy.x + 1 || data->friend.x == data->enemy.x ||  data->friend.x - 1 == data->enemy.x ||  data->friend.x + 1 == data->enemy.x || data->friend.x - 1 == data->enemy.x + 1 || data->friend.x + 1 == data->enemy.x - 1)){
             data->enemy.y--;
         }
-        if(data->enemy.y == HEIGHT){
+        if(data->enemy.y == HEIGHT - 2){
             data->enemy.y--;
         }
     }
     if (data->enemy.key == KEY_RIGHT)
     {
-        
-        if(abs(data->friend.y - data->enemy.y) < 3 && (data->enemy.x - data->friend.x) == 3){
-            
+        data->enemy.x++;
+        if((data->enemy.x + 1 == data->friend.x - 1) && (data->friend.y - 1 == data->enemy.y - 1 || data->friend.y + 1 == data->enemy.y + 1 || data->friend.y == data->enemy.y || data->friend.y - 1 == data->enemy.y || data->friend.y + 1 == data->enemy.y || data->friend.y - 1 == data->enemy.y + 1 || data->friend.y + 1 == data->enemy.y - 1)){
+            data->enemy.x--;
         }
-        else{
-            data->enemy.x++;
-        }
-        if(data->enemy.x == WIDTH - 1){
+        if(data->enemy.x == WIDTH - 2){
             data->enemy.x--;
         }
     }
     if(data->enemy.key == KEY_LEFT){
-        data->enemy.x--;     
-        if(abs(data->enemy.y - data->friend.y) < 3 && (data->friend.x - data->enemy.x) == 3){
+        data->enemy.x--;
+        if((data->enemy.x - 1 == data->friend.x + 1) && (data->friend.y - 1 == data->enemy.y - 1 || data->friend.y + 1 == data->enemy.y + 1 || data->friend.y == data->enemy.y || data->friend.y - 1 == data->enemy.y || data->friend.y + 1 == data->enemy.y || data->friend.y - 1 == data->enemy.y + 1 || data->friend.y + 1 == data->enemy.y - 1)){
             data->enemy.x++;
         }
-
         if(data->enemy.x == 1){
             data->enemy.x++;
         }
@@ -197,13 +191,14 @@ void *udp_server(void *thread_data)
                     if(ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_UP || ch == KEY_DOWN){
                         data->friend.key = ch;
                         tank_friend(ch, data);
+                        begin_friend = 1;
                     }
                     if(ch == 'Q' || ch == 'W' || ch == 'E' || ch == 'D' || ch == 'C' || ch == 'X' || ch == 'Z' || ch == 'A' || ch == 'q' || ch == 'w' || ch == 'e' || ch == 'd' || ch == 'c' || ch == 'x' || ch == 'z' || ch == 'a'){
                         data->friend.cannon = ch;
                         
                     }
                     if(ch == ' '){
-                        for(int i = 0; i < 3; i++){
+                        for(int i = 0; i < 4; i++){
                             if(data->friend.condition_ammunition[i] != 1){
                                 data->friend.condition_ammunition[i] = 1;
                                 data->friend.memory_canon[i] = data->friend.cannon;
@@ -248,12 +243,13 @@ void *udp_server(void *thread_data)
                     if(ch == KEY_LEFT || ch == KEY_RIGHT || ch == KEY_UP || ch == KEY_DOWN){
                         data->enemy.key = ch;
                         tank_enemy(ch, data);
+                        begin_enemy = 1;
                     }
                     if(ch == 'Q' || ch == 'W' || ch == 'E' || ch == 'D' || ch == 'C' || ch == 'X' || ch == 'Z' || ch == 'A' || ch == 'q' || ch == 'w' || ch == 'e' || ch == 'd' || ch == 'c' || ch == 'x' || ch == 'z' || ch == 'a'){
                         data->enemy.cannon = ch;
                     }
                     if(ch == ' '){
-                        for(int i = 0; i < 3; i++){
+                        for(int i = 0; i < 4; i++){
                             if(data->enemy.condition_ammunition[i] != 1){
                                 data->enemy.condition_ammunition[i] = 1;
                                 data->enemy.memory_canon[i] = data->enemy.cannon;
@@ -310,7 +306,7 @@ void* strike(void* thread_data){
         usleep(50000);
 
 
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < 4; i++){
             if (data->friend.condition_ammunition[i] == 1)
             {
 
@@ -433,7 +429,7 @@ void* strike(void* thread_data){
             }
         }
 
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < 4; i++){
             if (data->enemy.condition_ammunition[i] == 1)
             {
 
@@ -568,25 +564,26 @@ void* render(void *thread_data){
         usleep(1000000 / 120);
         pthread_mutex_lock(&mutex);
         werase(game_win);
-        box(game_win, '|', '-');
-        if(begin == 0){
+        box(game_win, 0, 0);
+        if(begin_friend == 0){
             wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
             mvwaddch(game_win, data->friend.y - 1, data->friend.x - 1, '*');
-            mvwaddch(game_win, data->friend.y - 1, data->friend.x, '*');
+            mvwaddch(game_win, data->friend.y - 1, data->friend.x, '|');
             mvwaddch(game_win, data->friend.y - 1, data->friend.x + 1, '*');
             mvwaddch(game_win, data->friend.y, data->friend.x - 1, '*');
             mvwaddch(game_win, data->friend.y, data->friend.x, '*');
-            mvwaddch(game_win, data->friend.y, data->friend.x + 1, '-');
+            mvwaddch(game_win, data->friend.y, data->friend.x + 1, '*');
             mvwaddch(game_win, data->friend.y + 1, data->friend.x - 1, '*');
             mvwaddch(game_win, data->friend.y + 1, data->friend.x, '*');
             mvwaddch(game_win, data->friend.y + 1, data->friend.x + 1, '*');
             wattroff(game_win, COLOR_PAIR(FRIEND_COLOR));
-
+        }
+        if(begin_enemy == 0){
             wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
             mvwaddch(game_win, data->enemy.y - 1, data->enemy.x - 1, '*');
-            mvwaddch(game_win, data->enemy.y - 1, data->enemy.x, '*');
+            mvwaddch(game_win, data->enemy.y - 1, data->enemy.x, '|');
             mvwaddch(game_win, data->enemy.y - 1, data->enemy.x + 1, '*');
-            mvwaddch(game_win, data->enemy.y, data->enemy.x - 1, '-');
+            mvwaddch(game_win, data->enemy.y, data->enemy.x - 1, '*');
             mvwaddch(game_win, data->enemy.y, data->enemy.x, '*');
             mvwaddch(game_win, data->enemy.y, data->enemy.x + 1, '*');
             mvwaddch(game_win, data->enemy.y + 1, data->enemy.x - 1, '*');
@@ -595,7 +592,7 @@ void* render(void *thread_data){
             wattroff(game_win, COLOR_PAIR(ENEMY_COLOR));
         }
         if(data->friend.key == KEY_UP){
-            begin = 1;
+            begin_friend = 1;
 
             if(data->friend.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
@@ -641,7 +638,7 @@ void* render(void *thread_data){
             wattroff(game_win, COLOR_PAIR(MAIN_COLOR));
         }
         if(data->enemy.key == KEY_UP){
-            begin = 1;
+            begin_enemy = 1;
 
             if(data->enemy.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
@@ -687,7 +684,7 @@ void* render(void *thread_data){
             wattroff(game_win, COLOR_PAIR(MAIN_COLOR));
         }
         if(data->friend.key == KEY_DOWN){
-            begin = 1;
+            begin_friend = 1;
 
             if(data->friend.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
@@ -734,7 +731,7 @@ void* render(void *thread_data){
         }
         if (data->friend.key == KEY_RIGHT)
         {
-            begin = 1;
+            begin_friend = 1;
 
             if(data->friend.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
@@ -780,7 +777,7 @@ void* render(void *thread_data){
             wattroff(game_win, COLOR_PAIR(MAIN_COLOR));
         }
         if(data->friend.key == KEY_LEFT){
-            begin = 1;
+            begin_friend = 1;
             if(data->friend.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
             }
@@ -825,7 +822,7 @@ void* render(void *thread_data){
         }
         
         if(data->enemy.key == KEY_DOWN){
-            begin = 1;
+            begin_enemy = 1;
 
             if(data->enemy.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
@@ -872,7 +869,7 @@ void* render(void *thread_data){
         }
         if (data->enemy.key == KEY_RIGHT)
         {
-            begin = 1;
+            begin_enemy = 1;
 
             if(data->enemy.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
@@ -918,7 +915,7 @@ void* render(void *thread_data){
             wattroff(game_win, COLOR_PAIR(MAIN_COLOR));
         }
         if(data->enemy.key == KEY_LEFT){
-            begin = 1;
+            begin_enemy = 1;
 
             if(data->enemy.condition_player == 0){
                 wattron(game_win, COLOR_PAIR(ENEMY_COLOR));
@@ -963,7 +960,7 @@ void* render(void *thread_data){
             wattroff(game_win, COLOR_PAIR(ENEMY_COLOR));
             wattroff(game_win, COLOR_PAIR(MAIN_COLOR));
         }
-        for(int i = 0; i < 3; i++){
+        for(int i = 0; i < 4; i++){
             if(data->friend.condition_ammunition[i] == 1){
                 wattron(game_win, COLOR_PAIR(FRIEND_COLOR));
                 mvwaddch(game_win, data->friend.y_ammunition[i], data->friend.x_ammunition[i], '*');
@@ -1028,15 +1025,15 @@ int main(int argc, char *argv[])
     threadData.enemy.ip = argv[2];
     threadData.friend.condition_player = 0;
     threadData.enemy.condition_player = 0;
-    threadData.friend.cannon = 'd';
-    threadData.enemy.cannon = 'd';
-    threadData.friend.key = 'd';
-    threadData.enemy.key = 'd';
+    threadData.friend.cannon = 'w';
+    threadData.enemy.cannon = 'w';
+    threadData.friend.key = 'w';
+    threadData.enemy.key = 'w';
     threadData.friend.x = 25;
     threadData.friend.y = 20;
     threadData.enemy.x = 75;
     threadData.enemy.y = 20;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 4; i++){
         threadData.friend.condition_ammunition[i] = 0;
         threadData.enemy.condition_ammunition[i] = 0;
     }
@@ -1058,7 +1055,7 @@ int main(int argc, char *argv[])
 	noecho();
 	keypad(stdscr,TRUE);
 
-    game_win = newwin(HEIGHT + 2, WIDTH + 2, (LINES - HEIGHT) / 2 - 1, (COLS - WIDTH) / 2 - 1);
+    game_win = newwin(HEIGHT, WIDTH, (LINES - HEIGHT) / 2, (COLS - WIDTH) / 2);
     box(game_win, 0, 0);
     wrefresh(game_win);
 
@@ -1140,6 +1137,7 @@ int main(int argc, char *argv[])
     pthread_join(threads_render, NULL);
     pthread_join(threads_strike, NULL);
     close(sock);
+    sleep(1);
     wgetch(game_win);
     delwin(game_win);
     endwin();
